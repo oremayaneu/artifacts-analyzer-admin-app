@@ -28,20 +28,20 @@ class ArtifactViewModel: ObservableObject {
     //        }
     //    }
     
-    //    func createWeapon(weapon: Weapon, completion: @escaping () -> Void, errorHandling: @escaping () -> Void) {
-    //        do {
-    //            try db.collection("weapons").document(weapon.enName).setData(from: weapon) { error in
-    //                if error != nil {
-    //                    errorHandling()
-    //                    return
-    //                } else {
-    //                    completion()
-    //                }
-    //            }
-    //        } catch {
-    //            errorHandling()
-    //        }
-    //    }
+        func createArtifact(artifact: Artifact, completion: @escaping () -> Void, errorHandling: @escaping () -> Void) {
+            do {
+                try db.collection("informationArtifact").document(artifact.enName).setData(from: artifact) { error in
+                    if error != nil {
+                        errorHandling()
+                        return
+                    } else {
+                        completion()
+                    }
+                }
+            } catch {
+                errorHandling()
+            }
+        }
     
     //    func updateWeapon() {}
     
@@ -80,6 +80,7 @@ class ArtifactViewModel: ObservableObject {
                     }
                     
                     if  // nameの取得
+                        res.data.page.modules[0].components.count >= 2,
                         let nameJson = res.data.page.modules[0].components[0].data.data(using: .utf8),
                         let nameElement = try JSONSerialization.jsonObject(with: nameJson, options: []) as? [String: Any],
                         let list = nameElement["list"] as? [[String: Any]],

@@ -52,6 +52,11 @@ struct AddWeaponView: View {
             ScrollViewReader { reader in
                 ScrollView {
                     VStack(spacing: 20) {
+                        // スクロール用のダミー
+                        Color.clear
+                            .frame(height: 0)
+                            .padding(.top, -20) // spacing 分を打ち消す
+                            .id("top")
                         
                         if errorScrapeFlg || errorCreateFlg {
                             ErrorWidget(errorMessage: errorMessage)
@@ -77,7 +82,7 @@ struct AddWeaponView: View {
                                         subStatusValue = _subStatusValue.replacingOccurrences(of: "%", with: "")
                                         effect = _effect
                                         
-                                        if let url = URL(string: _imgUrl), isValidScraping() {
+                                        if let url = URL(string: _imgUrl), isValidField() {
                                             imgUrl = url
                                             selectedItem = nil
                                             selectedImageData = nil
@@ -106,29 +111,7 @@ struct AddWeaponView: View {
                                 .frame(width: 200, height: 200)
                             
                         } else {
-                            PhotosPicker(selection: $selectedItem, matching: .images){
-                                if let data = selectedImageData, let uiImage = UIImage(data: data) {
-                                    Image(uiImage: uiImage)
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(height: 200)
-                                } else {
-                                    Rectangle()
-                                        .fill(Color.gray)
-                                        .frame(width: 200, height: 200)
-                                        .overlay(
-                                            Image(systemName: "photo")
-                                                .font(.system(size: 25))
-                                        )
-                                }
-                            }
-                            .onChange(of: selectedItem) {
-                                Task {
-                                    if let data = try? await selectedItem?.loadTransferable(type: Data.self) {
-                                        selectedImageData = data
-                                    }
-                                }
-                            }
+                            SelectableImageView(selectedItem: $selectedItem, selectedImageData: $selectedImageData, imageSize: 200, iconSize: 25)
                         }
                         
                         HStack {
@@ -175,21 +158,8 @@ struct AddWeaponView: View {
                                         )
                                 }
                             }
-                            TextEditor(text: $effect)
-                                .frame(height: 150)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .onReceive(Just(effect), perform: { _ in
-                                    if 1000 < effect.count {
-                                        effect = String(effect.prefix(1000))
-                                    }
-                                })
-                                .focused($isKeyboardActive) // フォーカスを監視
-                                .padding(.vertical, 2)
-                                .frame(maxWidth: .infinity)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 5)
-                                        .stroke(Color(UIColor.systemGray6))
-                                )
+                            
+                            LabeledTextEditor(label: "", text: $effect, limit: 1000, focusField: $isKeyboardActive)
                         }
                         
                         
@@ -202,7 +172,7 @@ struct AddWeaponView: View {
                                 if let data = selectedImageData {
                                     imgUrl = await uploadImageViewModel.uploadImage(
                                         data: data,
-                                        imgType: "character",
+                                        imgType: "weapon",
                                         imgName: enName
                                     )
                                 }
@@ -239,7 +209,7 @@ struct AddWeaponView: View {
                                             
                                             // 上へスクロール
                                             withAnimation {
-                                                reader.scrollTo(0, anchor: .top)
+                                                reader.scrollTo("top")
                                             }
                                         },
                                         errorHandling: {
@@ -326,10 +296,6 @@ struct AddWeaponView: View {
     }
     
     private func isValidField () -> Bool {
-        return !jpName.isEmpty && !enName.isEmpty && !rarity.isEmpty && !type.isEmpty && !attack.isEmpty && !subStatusName.isEmpty && !subStatusValue.isEmpty && !effect.isEmpty
-    }
-    
-    private func isValidScraping () -> Bool {
         return !jpName.isEmpty && !enName.isEmpty && !rarity.isEmpty && !type.isEmpty && !attack.isEmpty && !subStatusName.isEmpty && !subStatusValue.isEmpty && !effect.isEmpty
     }
     

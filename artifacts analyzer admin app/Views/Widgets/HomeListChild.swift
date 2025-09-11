@@ -1,10 +1,3 @@
-//
-//  HomeListChild.swift
-//  artifacts analyzer admin app
-//
-//  Created by 釆山怜央 on 2025/09/06.
-//
-
 import SwiftUI
 
 struct HomeListChild: View {

@@ -37,116 +37,165 @@ struct AddArtifactView: View {
     
     var body: some View {
         ZStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    
-                    if errorScrapeFlg || errorCreateFlg {
-                        ErrorWidget(errorMessage: errorMessage)
-                    }
-                    
-                    HStack {
-                        LabeledTextField(label: "hoyolab ID", text: $id, numberType: "Int", focusField: $isKeyboardActive)
-                        Button("自動取得", action: {
-                            isScrape.toggle()
-                            // 初期化
-                            //                            resetField()
-                            imgUrlList = Array(repeating: nil, count: 5)
-                            
-                            // スクレイピング開始
-                            artifactViewModel.fetchArtifactAPI(
-                                id: id,
-                                completion: {_names, _effects, _partNames, _partIcons in
-                                    jpName = _names[0]
-                                    enName = _names[1]
-                                    
-                                    twoSetEffectSentence = _effects[0]
-                                    fourSetEffectSentence = _effects[1]
-                                    
-                                    partNameList = _partNames
-                                    
-                                    for i in 0 ..< 5 {
-                                        if let url = URL(string: _partIcons[i])
-    //                                        , isValidScraping()
-                                        {
-                                            imgUrlList[i] = url
-                                            selectedItems[i] = nil
-                                            selectedImageDatas[i] = nil
-                                            errorScrapeFlg = false
-                                            errorMessage = ""
-                                        } else {
-                                            errorScrapeFlg = true
-                                            errorMessage = "データの取得に失敗しました"
-                                            break
-                                        }
-                                    }
-                                    
-                                    isScrape.toggle()
-                                },
-                                errorHandling: {
-                                    errorScrapeFlg = true
-                                    errorMessage = "データの取得に失敗しました"
-                                    isScrape.toggle()
-                                }
-                            )
-                        })
-                        .disabled(id.isEmpty)
-                        .buttonStyle(.bordered).padding(.top,20)
-                    }
-                    
-                    VStack(spacing: 10) {
-                        // 聖遺物の画像5種類
-                        ForEach(0..<5, id: \.self) { i in
-                            
-                            HStack(spacing: 20) {
-                                // 公式apiからimgUrlを取得できた場合
-                                if let url = imgUrlList[i] {
-                                    NetworkImage(url: url)
-                                        .frame(width: 60, height: 60)
-                                    
-                                } else {
-                                    PhotosPicker(selection: $selectedItems[i], matching: .images){
-                                        if let data = selectedImageDatas[i], let uiImage = UIImage(data: data) {
-                                            Image(uiImage: uiImage)
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(height: 60)
-                                        } else {
-                                            Rectangle()
-                                                .fill(Color.gray)
-                                                .frame(width: 60, height: 60)
-                                                .overlay(
-                                                    Image(systemName: "photo")
-                                                        .font(.system(size: 15))
-                                                )
-                                        }
-                                    }
-                                    .onChange(of: selectedItems[i]) {
-                                        Task {
-                                            if let data = try? await selectedItems[i]?.loadTransferable(type: Data.self) {
-                                                selectedImageDatas[i] = data
+            ScrollViewReader { reader in
+                ScrollView {
+                    VStack(spacing: 20) {
+                        // スクロール用のダミー
+                        Color.clear
+                            .frame(height: 0)
+                            .padding(.top, -20) // spacing 分を打ち消す
+                            .id("top")
+                        
+                        if errorScrapeFlg || errorCreateFlg {
+                            ErrorWidget(errorMessage: errorMessage)
+                        }
+                        
+                        HStack {
+                            LabeledTextField(label: "hoyolab ID", text: $id, numberType: "Int", focusField: $isKeyboardActive)
+                            Button("自動取得", action: {
+                                isScrape.toggle()
+                                // 初期化
+                                resetField()
+                                imgUrlList = Array(repeating: nil, count: 5)
+                                
+                                // スクレイピング開始
+                                artifactViewModel.fetchArtifactAPI(
+                                    id: id,
+                                    completion: {_names, _effects, _partNames, _partIcons in
+                                        jpName = _names[0]
+                                        enName = _names[1]
+                                        
+                                        twoSetEffectSentence = _effects[0]
+                                        fourSetEffectSentence = _effects[1]
+                                        
+                                        partNameList = _partNames
+                                        
+                                        for i in 0 ..< 5 {
+                                            if let url = URL(string: _partIcons[i]), isValidField() {
+                                                imgUrlList[i] = url
+                                                selectedItems[i] = nil
+                                                selectedImageDatas[i] = nil
+                                                errorScrapeFlg = false
+                                                errorMessage = ""
+                                            } else {
+                                                errorScrapeFlg = true
+                                                errorMessage = "データの取得に失敗しました"
+                                                break
                                             }
                                         }
+                                        
+                                        isScrape.toggle()
+                                    },
+                                    errorHandling: {
+                                        errorScrapeFlg = true
+                                        errorMessage = "データの取得に失敗しました"
+                                        isScrape.toggle()
+                                    }
+                                )
+                            })
+                            .disabled(id.isEmpty)
+                            .buttonStyle(.bordered).padding(.top,20)
+                        }
+                        
+                        VStack(spacing: 10) {
+                            // 聖遺物の画像5種類
+                            ForEach(0..<5, id: \.self) { i in
+                                
+                                HStack(spacing: 20) {
+                                    // 公式apiからimgUrlを取得できた場合
+                                    if let url = imgUrlList[i] {
+                                        NetworkImage(url: url)
+                                            .frame(width: 70, height: 70)
+                                        
+                                    } else {
+                                        SelectableImageView(selectedItem: $selectedItems[i], selectedImageData: $selectedImageDatas[i], imageSize: 70, iconSize: 15)
+                                    }
+                                    
+                                    // 部位の名前
+                                    LabeledTextField(label: ["生の花", "死の羽", "時の砂", "空の杯", "理の冠"][i], text: $partNameList[i], limit: 30, focusField: $isKeyboardActive)
+                                }
+                            }
+                        }
+                        
+                        HStack {
+                            LabeledTextField(label: "和名", text: $jpName, limit: 30, focusField: $isKeyboardActive)
+                            LabeledTextField(label: "英名", text: $enName, limit: 50, focusField: $isKeyboardActive)
+                        }
+                        
+                        LabeledTextEditor(label: "2セット効果", text: $twoSetEffectSentence, limit: 1000, height: 75, focusField: $isKeyboardActive)
+                        LabeledTextEditor(label: "4セット効果", text: $fourSetEffectSentence, limit: 1000, focusField: $isKeyboardActive)
+                        
+                        Button("聖遺物を追加", action: {
+                            Task{
+                                isCreate.toggle()
+                                
+                                // 画像をuploadする箇所だけ処理
+                                for i in 0 ..< 5 {
+                                    if let data = selectedImageDatas[i] {
+                                        imgUrlList[i] = await uploadImageViewModel.uploadImage(
+                                            data: data,
+                                            imgType: "artifact",
+                                            imgName: enName
+                                        )
                                     }
                                 }
                                 
-                                // 部位の名前
-                                LabeledTextField(label: ["生の花", "死の羽", "時の砂", "空の杯", "理の冠"][i], text: $partNameList[i], limit: 30, focusField: $isKeyboardActive)
+                                if imgUrlList.allSatisfy({ $0 != nil }) {
+                                    let urls = imgUrlList.compactMap { $0 } // [URL] に変換
+                                    let artifact = Artifact (
+                                        jpName: jpName,
+                                        enName: enName,
+                                        partNameList: partNameList,
+                                        imgUrlList: urls,
+                                        twoSetEffectSentence: twoSetEffectSentence,
+                                        fourSetEffectSentence: fourSetEffectSentence,
+                                        hoyolabId: Int(id) ?? 0
+                                    )
+                                    
+                                    artifactViewModel.createArtifact(
+                                        artifact: artifact,
+                                        completion: {
+                                            // 成功時の処理
+                                            isCreate.toggle()
+                                            errorCreateFlg = false
+                                            errorMessage = ""
+                                            showToast = true
+                                            
+                                            // 初期化
+                                            id = ""
+                                            resetField()
+                                            
+                                            // 上へスクロール
+                                            withAnimation {
+                                                reader.scrollTo("top")
+                                            }
+                                        },
+                                        errorHandling: {
+                                            // エラー時の処理
+                                            isCreate.toggle()
+                                            errorCreateFlg = true
+                                            errorMessage = "聖遺物データの保存に失敗しました"
+                                        }
+                                    )
+                                } else {
+                                    isCreate.toggle()
+                                    errorCreateFlg = true
+                                    errorMessage = "聖遺物画像が正しくありません"
+                                }
                             }
+                        })
+                        .disabled(!isValidField() ||
+                                  ( selectedImageDatas.contains(where: { $0 == nil }) && imgUrlList.contains(where: { $0 == nil }) )
+                        )
+                        .buttonStyle(.borderedProminent).padding(.vertical, 30)
+                        
+                    }.padding(.horizontal, 30)
+                }.toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("完了") {
+                            isKeyboardActive = false // キーボード閉じる
                         }
-                    }
-                    
-                    HStack {
-                        LabeledTextField(label: "和名", text: $jpName, limit: 30, focusField: $isKeyboardActive)
-                        LabeledTextField(label: "英名", text: $enName, limit: 50, focusField: $isKeyboardActive)
-                    }
-                    
-                    
-                }.padding(.horizontal, 30)
-            }.toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("完了") {
-                        isKeyboardActive = false // キーボード閉じる
                     }
                 }
             }
@@ -154,7 +203,30 @@ struct AddArtifactView: View {
             if isScrape || isCreate {
                 BlockingIndicator()
             }
+            
+            ToastView(showToast: $showToast, showMessage: "聖遺物を追加しました")
         }
         .navigationTitle("聖遺物追加")
+    }
+    
+    private func isValidField () -> Bool {
+        return !jpName.isEmpty &&
+        !enName.isEmpty &&
+        !twoSetEffectSentence.isEmpty &&
+        !fourSetEffectSentence.isEmpty &&
+        partNameList.allSatisfy { $0 != "" }
+    }
+    
+    private func resetField () {
+        jpName = ""
+        enName = ""
+        twoSetEffectSentence = ""
+        fourSetEffectSentence = ""
+        partNameList = Array(repeating: "", count: 5)
+        
+        // 画像関連のリセット
+        imgUrlList = Array(repeating: nil, count: 5)
+        selectedItems = Array(repeating: nil, count: 5)
+        selectedImageDatas = Array(repeating: nil, count: 5)
     }
 }
