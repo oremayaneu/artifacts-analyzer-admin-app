@@ -1,0 +1,52 @@
+//
+//  TranslateElement.swift
+//  artifacts analyzer admin app
+//
+//  Created by 釆山怜央 on 2025/09/02.
+//
+
+let elements: [String: String] = [
+    "炎": "pyro",
+    "水": "hydro",
+    "風": "anemo",
+    "氷": "cryo",
+    "岩": "geo",
+    "草": "dendro",
+    "雷": "electro"
+]
+
+func translateFromJpElement(element: String) -> String {
+    return elements[element] ?? "No element"
+}
+
+func translateFromEnElement(element: String) -> String {
+    return elements.first { $0.value == element }?.key ?? "No element"
+}
+
+let weaponTypes: [String] = [
+    "片手剣",
+    "両手剣",
+    "長柄武器",
+    "弓",
+    "法器"
+]
+
+let statusNames: [String] = [
+    "HP",
+    "攻撃力",
+    "防御力",
+    "元素熟知",
+    "元素チャージ効率",
+    "炎元素ダメージ",
+    "水元素ダメージ",
+    "雷元素ダメージ",
+    "氷元素ダメージ",
+    "風元素ダメージ",
+    "岩元素ダメージ",
+    "草元素ダメージ",
+    "物理ダメージ",
+    "与える治療効果",
+    "会心率",
+    "会心ダメージ"
+]
+
