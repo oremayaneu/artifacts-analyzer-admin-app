@@ -71,102 +71,63 @@ class WeaponViewModel: ObservableObject {
             
             if let data = data {
                 do {
-                    // JSONとしてパース
-                    let json = try JSONSerialization.jsonObject(with: data, options: [])
                     
-                    // 取得したい値
-                    var jpName = ""
-                    var enName = ""
-                    var type = ""
-                    var effect = ""
-                    var attack = ""
-                    var subStatusName = ""
-                    var subStatusValue = ""
-                    var rarity = ""
-                    var imgUrl = ""
+                    let res = try JSONDecoder().decode(HoyowikiResponse.self, from: data)
                     
-                    if let dict = json as? [String: Any],
-                       let data = dict["data"] as? [String: Any],
-                       let page = data["page"] as? [String: Any],
-                       let iconURL = page["icon_url"] as? String,
-                       let filterValues = page["filter_values"] as? [String: Any],
-                       
-                        let weaponRarity = filterValues["weapon_rarity"] as? [String: Any],
-                       let rarityValues = weaponRarity["values"] as? [String],
-                       
-                        let modules = page["modules"] as? [[String: Any]] {
-                        
-                        for module in modules {
-                            if let components = module["components"] as? [[String: Any]] {
-                                for component in components {
-                                    if let componentDataString = component["data"] as? String,
-                                       let componentData = componentDataString.data(using: .utf8),
-                                       let componentJson = try? JSONSerialization.jsonObject(with: componentData, options: []) as? [String: Any],
-                                       let list = componentJson["list"] as? [[String: Any]] {
-                                        
-                                        for item in list {
-                                            
-                                            if let key = item["key"] as? String {
-                                                // nameの抽出
-                                                if key.contains("和名 / 英名"),
-                                                   let valueArray = item["value"] as? [String] {
-                                                    // HTMLタグが入ってる場合は取り除く
-                                                    let name = valueArray.first?
-                                                        .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression) ?? ""
-                                                    // nameの処理
-                                                    let parts = name.split(separator: "/").map { $0.trimmingCharacters(in: .whitespaces) }
-                                                    jpName = parts[0]
-                                                    enName = parts[1]
-                                                }
-                                                else if key.contains("入手方法") {}
-                                                else if key.contains("種類"), let valueArray = item["value"] as? [String] {
-                                                    type = valueArray.first?.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression) ?? ""
-                                                }
-                                                else if key.contains("サブステータス"), let valueArray = item["value"] as? [String] {
-                                                    subStatusName = valueArray.first?.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression) ?? ""
-                                                }
-                                                else if key.contains("七聖召喚のカード") {}
-                                                else if key.contains("実装バージョン") {}
-                                                // 武器効果の抽出
-                                                else
-                                                if let valueArray = item["value"] as? [String] {
-                                                    effect = valueArray.first ?? ""
-                                                    effect = effect.replacingOccurrences(
-                                                        of: "<p.*?>|</p>",
-                                                        with: "",
-                                                        options: .regularExpression)
-                                                    effect = effect.replacingOccurrences(
-                                                        of: "<span.*?>|</span>",
-                                                        with: "",
-                                                        options: .regularExpression)
-                                                }
-                                            }
-                                        }
-                                        
-                                        // Lv.90のcombatListを探す
-                                        if let lv90 = list.first(where: { $0["key"] as? String == "Lv.90" }),
-                                           let combatList = lv90["combatList"] as? [[String: Any]] {
-                                            // 最後のcombatListのvaluesを取得
-                                            if let values = combatList.last?["values"] as? [String] {
-                                                if values.count >= 3 {
-                                                    attack = values[0]
-                                                    subStatusValue = values[2]
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        
-                        if rarityValues.count >= 1 {
-                            rarity = TrimString(str: rarityValues[0], start: 1, end: 1)
-                        }
-                        imgUrl = iconURL
+                    if res.message != "OK" {
+                        errorHandling()
+                        return
                     }
                     
-                    // viewに値を渡す
-                    completion(jpName, enName, rarity, type, attack, subStatusName, subStatusValue, effect, imgUrl)
+                    if  res.data.page.modules.count >= 2,
+                        // 基本情報（名前・効果）の取得
+                        let basicJson = res.data.page.modules[0].components[0].data.data(using: .utf8),
+                        let basicObj = try JSONSerialization.jsonObject(with: basicJson, options: []) as? [String: Any],
+                        let basicList = basicObj["list"] as? [[String: Any]],
+                        // parameterの取得
+                        let parameterJson = res.data.page.modules[1].components[0].data.data(using: .utf8),
+                        let parameterObj = try JSONSerialization.jsonObject(with: parameterJson, options: []) as? [String: Any],
+                        let parameterList = parameterObj["list"] as? [[String: Any]],
+                        // filter_valuesの取得
+                        let filterValues = res.data.page.filter_values
+                    {
+                        // json化し、structにセット
+                        let newBasicJson = try JSONSerialization.data(withJSONObject: basicList, options: [])
+                        let decodedBasicJson = try JSONDecoder().decode([WeaponBasicInfo].self, from: newBasicJson)
+                        
+                        let newParameterJson = try JSONSerialization.data(withJSONObject: parameterList, options: [])
+                        let decodedParameterJson = try JSONDecoder().decode([WeaponAscension].self, from: newParameterJson)
+                        
+                        if let nameEntry = decodedBasicJson.first(where: { $0.key == "和名 / 英名" }),
+                           let effectEntry = decodedBasicJson.first(where: { !["和名 / 英名", "入手方法", "種類", "サブステータス", "七聖召喚のカード", "実装バージョン"].contains($0.key) }),
+                           let lv90 = decodedParameterJson.first(where: { $0.key == "Lv.90" })
+                        {
+                            let nameStr = nameEntry.value.first?.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression) ?? ""
+                            let parts = nameStr.split(separator: "/").map { $0.trimmingCharacters(in: .whitespaces) }
+                            let jpName = parts[0]
+                            let enName = parts[1]
+                            
+                            let effect = effectEntry.value.first?.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression) ?? ""
+                            
+                            let parameters = lv90.combatList[1].values
+                            let attack = parameters[0]
+                            let subStatusValue = parameters[2]
+                            
+                            let type = filterValues.weapon_type?.values.first ?? ""
+                            let subStatusName = filterValues.weapon_property?.values.first ?? ""
+                            var rarity = filterValues.weapon_rarity?.values.first ?? ""
+                            rarity = TrimString(str: rarity, start: 1, end: 1)
+                            
+                            // アイコンの取得
+                            let imgUrl = res.data.page.icon_url
+                            
+                            // viewに渡す
+                            completion(jpName, enName, rarity, type, attack, subStatusName, subStatusValue, effect, imgUrl)
+                        }
+                    } else {
+                        print("データ整形でエラー")
+                        errorHandling()
+                    }
                 } catch {
                     errorHandling()
                 }

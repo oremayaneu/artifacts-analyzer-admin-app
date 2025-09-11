@@ -72,15 +72,15 @@ class ArtifactViewModel: ObservableObject {
             
             if let data = data {
                 do {
-                    let res = try JSONDecoder().decode(ArtifactResponse.self, from: data)
+                    let res = try JSONDecoder().decode(HoyowikiResponse.self, from: data)
                     
                     if res.message != "OK" {
                         errorHandling()
                         return
                     }
                     
-                    if  // nameの取得
-                        res.data.page.modules[0].components.count >= 2,
+                    if  res.data.page.modules[0].components.count >= 2,
+                        // nameの取得
                         let nameJson = res.data.page.modules[0].components[0].data.data(using: .utf8),
                         let nameElement = try JSONSerialization.jsonObject(with: nameJson, options: []) as? [String: Any],
                         let list = nameElement["list"] as? [[String: Any]],
