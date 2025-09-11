@@ -1,10 +1,3 @@
-//
-//  DisplayCharacterDetailView.swift
-//  artifacts analyzer admin app
-//
-//  Created by 釆山怜央 on 2025/08/31.
-//
-
 import SwiftUI
 
 struct DisplayCharacterDetailView: View {

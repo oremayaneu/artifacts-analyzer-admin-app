@@ -1,10 +1,3 @@
-//
-//  CharacterHomeView.swift
-//  artifacts analyzer admin app
-//
-//  Created by 釆山怜央 on 2025/08/28.
-//
-
 import SwiftUI
 
 // 配列パスとして使う列挙型

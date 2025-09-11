@@ -1,10 +1,3 @@
-//
-//  ViewController.swift
-//  artifacts analyzer admin app
-//
-//  Created by 釆山怜央 on 2025/09/07.
-//
-
 import SwiftUI
 import SafariServices
 

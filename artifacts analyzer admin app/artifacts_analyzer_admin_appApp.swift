@@ -1,10 +1,3 @@
-//
-//  artifacts_analyzer_admin_appApp.swift
-//  artifacts analyzer admin app
-//
-//  Created by 釆山怜央 on 2025/07/29.
-//
-
 import SwiftUI
 import FirebaseCore
 

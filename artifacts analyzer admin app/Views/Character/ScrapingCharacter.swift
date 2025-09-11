@@ -1,11 +1,3 @@
-//
-//  WebView 2.swift
-//  artifacts analyzer admin app
-//
-//  Created by 釆山怜央 on 2025/09/03.
-//
-
-
 import SwiftUI
 import WebKit
 import SwiftSoup
