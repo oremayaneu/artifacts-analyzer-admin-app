@@ -39,11 +39,11 @@ struct AddArtifactView: View {
         ZStack {
             ScrollViewReader { reader in
                 ScrollView {
-//                    // スクロール用のダミー
-//                    Color.clear.frame(height: 1)
-//                    Color.clear
-//                        .frame(height: 0)
-//                        .id("top")
+                    // スクロール用のダミー
+                    Color.clear.frame(height: 1)
+                    Color.clear
+                        .frame(height: 0)
+                        .id("top")
                     
                     VStack(spacing: 20) {
                         
@@ -117,7 +117,7 @@ struct AddArtifactView: View {
                                     }
                                     
                                     // 部位の名前
-                                    LabeledTextField(label: ["生の花", "死の羽", "時の砂", "空の杯", "理の冠"][i], text: $partNameList[i], limit: 30, focusField: $isKeyboardActive)
+                                    LabeledTextField(label: artifactPartTitles[i], text: $partNameList[i], limit: 30, focusField: $isKeyboardActive)
                                 }
                             }
                         }

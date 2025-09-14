@@ -44,9 +44,9 @@ struct ArtifactHomeView: View {
                 case .addArtifactPath:
                     AddArtifactView(path: $navigationPath, artifactViewModel: artifactViewModel)
                 case .displayArtifactsPath:
-                    DisplayArtifactsView(path: $navigationPath)
+                    DisplayArtifactsView(path: $navigationPath, artifactViewModel: artifactViewModel)
                 case .displayArtifactDetailPath:
-                    DisplayArtifactDetailView(path: $navigationPath)
+                    DisplayArtifactDetailView(path: $navigationPath, artifactViewModel: artifactViewModel)
                 }
             }
         }}

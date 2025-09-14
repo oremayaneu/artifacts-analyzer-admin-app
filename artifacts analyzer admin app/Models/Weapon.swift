@@ -18,6 +18,14 @@ struct Weapon: Identifiable, Codable {
     
     // effect sentenceの処理
     var getEffect: String {
-        get {return ""}
+        get {
+            var text = ""
+            for i in 0 ..< initialEffectValue.count {
+                text += effectSentence[i]
+                text += "$(\(initialEffectValue[i]),\(finalEffectValue[i])"
+            }
+            text += effectSentence[initialEffectValue.count]
+            return text
+        }
     }
 }

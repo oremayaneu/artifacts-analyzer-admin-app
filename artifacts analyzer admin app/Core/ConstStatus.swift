@@ -43,3 +43,4 @@ let statusNames: [String] = [
     "会心ダメージ"
 ]
 
+let artifactPartTitles: [String] = ["生の花", "死の羽", "時の砂", "空の杯", "理の冠"]

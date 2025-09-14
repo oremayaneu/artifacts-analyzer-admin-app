@@ -165,7 +165,7 @@ struct DisplayCharacterDetailView: View {
                                     // エラー時の処理
                                     isUpdate.toggle()
                                     errorUpdateFlg = true
-                                    errorMessage = "キャラクターデータの更新に失敗しました"
+                                    errorMessage = "キャラクターの更新に失敗しました"
                                 }
                             )
                         } else {
@@ -184,6 +184,7 @@ struct DisplayCharacterDetailView: View {
                         }
                         isEditing.toggle()
                     }
+                    .disabled(!isValidField())
                 }
             }
         } else {

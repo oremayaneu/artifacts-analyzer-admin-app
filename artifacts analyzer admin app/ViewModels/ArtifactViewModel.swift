@@ -6,27 +6,27 @@ import WebKit
 
 @MainActor // バックグラウンドでpublishedの値を更新してスタックすることを防ぐ
 class ArtifactViewModel: ObservableObject {
-    //    @Published var selectedWeapon: Weapon?
-    //    @Published var weapons: [Weapon] = []
-    //    @Published var isLoadingWeapons: Bool = false
+        @Published var selectedArtifact: Artifact?
+        @Published var artifacts: [Artifact] = []
+        @Published var isLoadingArtifacts: Bool = false
     
-    //    func fetchAllWeapons() async {
-    //        isLoadingWeapons = true
-    //        defer { isLoadingWeapons = false } // 抜ける時の処理
-    //
-    //        do {
-    //            let snapshot = try await db.collection("weapons")
-    //                .order(by: "hoyolabId", descending: true)
-    //                .getDocuments()
-    //            print("complete fetching all weapons")
-    //
-    //            self.weapons = snapshot.documents.compactMap { doc in
-    //                try? doc.data(as: Weapon.self)
-    //            }
-    //        } catch {
-    //            print("error fetching all weapons: \(error)")
-    //        }
-    //    }
+        func fetchAllArtifacts() async {
+            isLoadingArtifacts = true
+            defer { isLoadingArtifacts = false } // 抜ける時の処理
+
+            do {
+                let snapshot = try await db.collection("informationArtifact")
+                    .order(by: "hoyolabId", descending: true)
+                    .getDocuments()
+                print("complete fetching all artifacts")
+    
+                self.artifacts = snapshot.documents.compactMap { doc in
+                    try? doc.data(as: Artifact.self)
+                }
+            } catch {
+                print("error fetching all artifacts: \(error)")
+            }
+        }
     
         func createArtifact(artifact: Artifact, completion: @escaping () -> Void, errorHandling: @escaping () -> Void) {
             do {
@@ -35,6 +35,7 @@ class ArtifactViewModel: ObservableObject {
                         errorHandling()
                         return
                     } else {
+                        self.selectedArtifact = artifact
                         completion()
                     }
                 }
@@ -42,8 +43,6 @@ class ArtifactViewModel: ObservableObject {
                 errorHandling()
             }
         }
-    
-    //    func updateWeapon() {}
     
     func fetchArtifactAPI(id: String, completion: @escaping ([String], [String], [String], [String]) -> Void, errorHandling: @escaping () -> Void) {
         guard let url = URL(string: "https://sg-wiki-api-static.hoyolab.com/hoyowiki/genshin/wapi/entry_page?entry_page_id=\(id)") else { return }
