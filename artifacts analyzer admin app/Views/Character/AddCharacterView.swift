@@ -98,15 +98,7 @@ struct AddCharacterView: View {
                     
                     HStack {
                         LabeledTextField(label: "レアリティ", text: $rarity, isUsePicker: true, pickerOptions: ["5", "4"])
-                        LabeledTextField(label: "元素", text: $element, isUsePicker: true, pickerOptions: [
-                            "炎",
-                            "水",
-                            "風",
-                            "氷",
-                            "岩",
-                            "草",
-                            "雷"
-                        ])
+                        LabeledTextField(label: "元素", text: $element, isUsePicker: true, pickerOptions: ["炎","水","風","氷","岩","草","雷"])
                         LabeledTextField(label: "武器種", text: $weaponType, isUsePicker: true, pickerOptions: weaponTypes)
                     }
                     
@@ -138,11 +130,11 @@ struct AddCharacterView: View {
                                 )
                                 
                                 if imgUrl != nil {
-                                    let character = Character (
+                                    var character = Character (
                                         HP: Int(hp) ?? 0,
                                         attack: Int(attack) ?? 0,
                                         defense: Int(defense) ?? 0,
-                                        element: element,
+                                        element: "",    // 後から設定
                                         enName: enName,
                                         extraStatusName: extraStatusName,
                                         extraStatusValue: Double(extraStatusValue) ?? 0,
@@ -152,6 +144,7 @@ struct AddCharacterView: View {
                                         weaponType: weaponType,
                                         hoyolabId: Int(id) ?? 0
                                     )
+                                    character.translateElement = element
 
                                     characterViewModel.createCharacter(
                                         character: character,

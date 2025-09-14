@@ -8,14 +8,6 @@ let elements: [String: String] = [
     "雷": "electro"
 ]
 
-func translateFromJpElement(element: String) -> String {
-    return elements[element] ?? "No element"
-}
-
-func translateFromEnElement(element: String) -> String {
-    return elements.first { $0.value == element }?.key ?? "No element"
-}
-
 let weaponTypes: [String] = [
     "片手剣",
     "両手剣",

@@ -71,7 +71,7 @@ struct DisplayCharacterDetailView: View {
                     if isEditing {
                         LeftLabeledTextField(label: "元素", text: $element, isUsePicker: true, pickerOptions: ["炎","水","風","氷","岩","草","雷"])
                     } else {
-                        ProfileListChild(leftText: "元素", rightText: translateFromEnElement(element: character.element))
+                        ProfileListChild(leftText: "元素", rightText: character.translateElement)
                     }
                     
                     // 武器種
@@ -135,11 +135,11 @@ struct DisplayCharacterDetailView: View {
                                 errorUpdateFlg = true
                                 return
                             }
-                            let character = Character (
+                            var character = Character (
                                 HP: Int(hp) ?? 0,
                                 attack: Int(attack) ?? 0,
                                 defense: Int(defense) ?? 0,
-                                element: element,
+                                element: "",    // 後から設定
                                 enName: enName,
                                 extraStatusName: extraStatusName,
                                 extraStatusValue: Double(extraStatusValue) ?? 0,
@@ -149,6 +149,7 @@ struct DisplayCharacterDetailView: View {
                                 weaponType: weaponType,
                                 hoyolabId: Int(id) ?? 0
                             )
+                            character.translateElement = element
                             
                             characterViewModel.createCharacter(
                                 character: character,
@@ -178,7 +179,7 @@ struct DisplayCharacterDetailView: View {
                             jpName = character.jpName
                             enName = character.enName
                             rarity = "\(character.rarity)"
-                            element = translateFromEnElement(element: character.element)
+                            element = character.translateElement    // 日本語で取得
                             weaponType = character.weaponType
                             hp = "\(character.HP)"
                             attack = "\(character.attack)"
