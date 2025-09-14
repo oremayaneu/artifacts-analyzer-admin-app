@@ -13,6 +13,8 @@ struct Character: Identifiable, Codable {
     let jpName: String
     let rarity: Int
     let weaponType: String
+    // ここからはadmin専用
+    let hoyolabId: Int
 }
 
 struct CharacterDigest: Identifiable, Codable {

@@ -51,12 +51,13 @@ struct AddWeaponView: View {
         ZStack {
             ScrollViewReader { reader in
                 ScrollView {
+                    // スクロール用のダミー
+                    Color.clear.frame(height: 1)
+                    Color.clear
+                        .frame(height: 0)
+                        .id("top")
+                    
                     VStack(spacing: 20) {
-                        // スクロール用のダミー
-                        Color.clear
-                            .frame(height: 0)
-                            .padding(.top, -20) // spacing 分を打ち消す
-                            .id("top")
                         
                         if errorScrapeFlg || errorCreateFlg {
                             ErrorWidget(errorMessage: errorMessage)
@@ -65,6 +66,8 @@ struct AddWeaponView: View {
                         HStack {
                             LabeledTextField(label: "hoyolab ID", text: $id, numberType: "Int", focusField: $isKeyboardActive)
                             Button("自動取得", action: {
+                                // キーボードを閉じる
+                                isKeyboardActive = false
                                 isScrape.toggle()
                                 // 全てのfieldを初期化
                                 resetField()
@@ -92,7 +95,10 @@ struct AddWeaponView: View {
                                             errorScrapeFlg = true
                                             errorMessage = "データの取得に失敗しました"
                                         }
-                                        isScrape.toggle()
+                                        
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                            isScrape.toggle()
+                                        }
                                     },
                                     errorHandling: {
                                         errorScrapeFlg = true
@@ -165,6 +171,7 @@ struct AddWeaponView: View {
                         
                         Button("武器を追加", action: {
                             Task {
+                                isKeyboardActive = false
                                 isCreate.toggle()
                                 // effectのstringからconst部分とvar部分を分割
                                 getConstAndVariableEffect(effect: effect)
@@ -208,7 +215,7 @@ struct AddWeaponView: View {
                                             resetField()
                                             
                                             // 上へスクロール
-                                            withAnimation {
+                                            withAnimation(.default) {
                                                 reader.scrollTo("top")
                                             }
                                         },
@@ -228,10 +235,8 @@ struct AddWeaponView: View {
                         })
                         .disabled(!isValidField() || (selectedImageData == nil && imgUrl == nil))
                         .buttonStyle(.borderedProminent).padding(.vertical, 30)
-                        
-                        ToastView(showToast: $showToast, showMessage: "武器を追加しました")
-                        
-                    }.padding(.horizontal, 30)
+                    }
+                    .padding(.horizontal, 30)
                 }.toolbar {
                     ToolbarItemGroup(placement: .keyboard) {
                         Spacer()
@@ -241,6 +246,8 @@ struct AddWeaponView: View {
                     }
                 }
             }
+            
+            ToastView(showToast: $showToast, showMessage: "武器を追加しました")
             
             if isScrape || isCreate {
                 BlockingIndicator()

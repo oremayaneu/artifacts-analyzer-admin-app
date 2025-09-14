@@ -22,6 +22,7 @@ struct HoyowikiResponse: Codable {
     let data: Data
 }
 
+
 // 公式レスポンス weapon用
 struct FilterValues: Codable {
     struct WeaponType: Codable {

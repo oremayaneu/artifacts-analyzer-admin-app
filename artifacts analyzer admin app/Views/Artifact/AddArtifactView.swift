@@ -39,12 +39,13 @@ struct AddArtifactView: View {
         ZStack {
             ScrollViewReader { reader in
                 ScrollView {
+//                    // スクロール用のダミー
+//                    Color.clear.frame(height: 1)
+//                    Color.clear
+//                        .frame(height: 0)
+//                        .id("top")
+                    
                     VStack(spacing: 20) {
-                        // スクロール用のダミー
-                        Color.clear
-                            .frame(height: 0)
-                            .padding(.top, -20) // spacing 分を打ち消す
-                            .id("top")
                         
                         if errorScrapeFlg || errorCreateFlg {
                             ErrorWidget(errorMessage: errorMessage)
@@ -53,6 +54,8 @@ struct AddArtifactView: View {
                         HStack {
                             LabeledTextField(label: "hoyolab ID", text: $id, numberType: "Int", focusField: $isKeyboardActive)
                             Button("自動取得", action: {
+                                // キーボードを閉じる
+                                isKeyboardActive = false
                                 isScrape.toggle()
                                 // 初期化
                                 resetField()
@@ -84,7 +87,9 @@ struct AddArtifactView: View {
                                             }
                                         }
                                         
-                                        isScrape.toggle()
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                            isScrape.toggle()
+                                        }
                                     },
                                     errorHandling: {
                                         errorScrapeFlg = true
@@ -127,6 +132,7 @@ struct AddArtifactView: View {
                         
                         Button("聖遺物を追加", action: {
                             Task{
+                                isKeyboardActive = false
                                 isCreate.toggle()
                                 
                                 // 画像をuploadする箇所だけ処理

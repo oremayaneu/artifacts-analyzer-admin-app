@@ -42,6 +42,12 @@ struct AddCharacterView: View {
     var body: some View {
         ZStack {
             ScrollView {
+                // スクロール用のダミー
+                Color.clear.frame(height: 1)
+                Color.clear
+                    .frame(height: 0)
+                    .id("top")
+                
                 VStack(spacing: 20) {
                     
                     if errorScrapeFlg || errorCreateFlg {
@@ -51,6 +57,7 @@ struct AddCharacterView: View {
                     HStack {
                         LabeledTextField(label: "hoyolab ID", text: $id, numberType: "Int", focusField: $isKeyboardActive)
                         Button("自動取得", action: {
+                            isKeyboardActive = false
                             // 初期化
                             resetField()
                             // スクレイピング開始
@@ -121,6 +128,7 @@ struct AddCharacterView: View {
                     
                     Button("キャラクターを追加", action: {
                         Task {
+                            isKeyboardActive = false
                             isCreate.toggle()
                             if let data = selectedImageData {
                                 let imgUrl = await uploadImageViewModel.uploadImage(
@@ -141,13 +149,12 @@ struct AddCharacterView: View {
                                         imgUrl: imgUrl!,
                                         jpName: jpName,
                                         rarity: Int(rarity) ?? 0,
-                                        weaponType: weaponType
+                                        weaponType: weaponType,
+                                        hoyolabId: Int(id) ?? 0
                                     )
-                                    let hoyolabId = Int(id) ?? 0
-                                    
+
                                     characterViewModel.createCharacter(
                                         character: character,
-                                        id: hoyolabId,
                                         completion: {
                                             // 成功時の処理
                                             isCreate.toggle()
@@ -176,9 +183,6 @@ struct AddCharacterView: View {
                     })
                     .disabled(!isValidField() || selectedImageData == nil)
                     .buttonStyle(.borderedProminent).padding(.vertical, 30)
-                    
-                    ToastView(showToast: $showToast, showMessage: "キャラクターを追加しました")
-                    
                     
                     if isScrape {
                         // スクレイピングでデータを取得
@@ -236,6 +240,8 @@ struct AddCharacterView: View {
                     }
                 }
             }
+            
+            ToastView(showToast: $showToast, showMessage: "キャラクターを追加しました")
             
             if isScrape || isCreate {
                 BlockingIndicator()
