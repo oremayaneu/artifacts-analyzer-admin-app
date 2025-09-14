@@ -149,20 +149,27 @@ struct AddWeaponView: View {
                                     .font(.caption)
                                 Spacer()
                                 
-                                Button(action: {isShowHelp.toggle()}){Image(systemName: isShowHelp ? "info.circle.fill": "info.circle")}
+                                Button(
+                                    action: {
+                                        withAnimation(.spring(response: 0.6, dampingFraction: 1)) {
+                                            isShowHelp.toggle()
+                                        }
+                                    })
+                                    {Image(systemName: isShowHelp ? "info.circle.fill": "info.circle")}
                             }
                             if isShowHelp {
                                 HStack {
                                     Spacer()
                                     Text("精錬ランクによって変動する箇所を$(初期値,最終値)に書き換えてください。\n例えば、「攻撃力+2/4/6/8/10%」の箇所は「攻撃力+$(2,10)%」とします。")
-                                        .font(.system(size: 9.5))
-                                        .frame(width: 200)
+                                        .font(.system(size: 10.5))
+                                        .frame(width: 250)
                                         .padding(2)
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 5)
                                                 .stroke(.appTheme)
                                         )
                                 }
+                                .transition(.move(edge: .bottom))
                             }
                             
                             LabeledTextEditor(label: "", text: $effect, limit: 1000, focusField: $isKeyboardActive)
@@ -173,8 +180,6 @@ struct AddWeaponView: View {
                             Task {
                                 isKeyboardActive = false
                                 isCreate.toggle()
-                                // effectのstringからconst部分とvar部分を分割
-                                getConstAndVariableEffect(effect: effect)
                                 
                                 if let data = selectedImageData {
                                     imgUrl = await uploadImageViewModel.uploadImage(
@@ -184,53 +189,57 @@ struct AddWeaponView: View {
                                     )
                                 }
                                 
-                                if imgUrl != nil {
-                                    let weapon = Weapon (
-                                        attack: Int(attack) ?? 0,
-                                        effectSentence: (effectSentence as? [String]) ?? [""],
-                                        enName: enName,
-                                        finalEffectValue: (finalEffectValue as? [Double]) ?? [0.0],
-                                        imgUrl: imgUrl!,
-                                        initialEffectValue: (initialEffectValue as? [Double]) ?? [0.0],
-                                        jpName: jpName,
-                                        rarity: Int(rarity) ?? 0,
-                                        subStatusName: subStatusName,
-                                        subStatusValue: Double(subStatusValue) ?? 0,
-                                        type: type,
-                                        
-                                        hoyolabId: Int(id) ?? 0
-                                    )
-                                    
-                                    weaponViewModel.createWeapon(
-                                        weapon: weapon,
-                                        completion: {
-                                            // 成功時の処理
-                                            isCreate.toggle()
-                                            errorCreateFlg = false
-                                            errorMessage = ""
-                                            showToast = true
-                                            
-                                            // 初期化
-                                            id = ""
-                                            resetField()
-                                            
-                                            // 上へスクロール
-                                            withAnimation(.default) {
-                                                reader.scrollTo("top")
-                                            }
-                                        },
-                                        errorHandling: {
-                                            // エラー時の処理
-                                            isCreate.toggle()
-                                            errorCreateFlg = true
-                                            errorMessage = "武器データの保存に失敗しました"
-                                        }
-                                    )
-                                } else {
+                                guard let imgUrl = imgUrl else {
                                     isCreate.toggle()
                                     errorCreateFlg = true
                                     errorMessage = "武器画像が正しくありません"
+                                    return
                                 }
+                                
+                                var weapon = Weapon (
+                                    attack: Int(attack) ?? 0,
+                                    effectSentence: [""], // 後で更新
+                                    enName: enName,
+                                    finalEffectValue: [0.0], // 後で更新
+                                    imgUrl: imgUrl,
+                                    initialEffectValue: [0.0], // 後で更新
+                                    jpName: jpName,
+                                    rarity: Int(rarity) ?? 0,
+                                    subStatusName: subStatusName,
+                                    subStatusValue: Double(subStatusValue) ?? 0,
+                                    type: type,
+                                    
+                                    hoyolabId: Int(id) ?? 0
+                                )
+                                // effectのset処理
+                                weapon.getEffect = effect
+                                
+                                weaponViewModel.createWeapon(
+                                    weapon: weapon,
+                                    completion: {
+                                        // 成功時の処理
+                                        isCreate.toggle()
+                                        errorCreateFlg = false
+                                        errorMessage = ""
+                                        showToast = true
+                                        
+                                        // 初期化
+                                        id = ""
+                                        resetField()
+                                        
+                                        // 上へスクロール
+                                        withAnimation(.default) {
+                                            reader.scrollTo("top")
+                                        }
+                                    },
+                                    errorHandling: {
+                                        // エラー時の処理
+                                        isCreate.toggle()
+                                        errorCreateFlg = true
+                                        errorMessage = "武器データの保存に失敗しました"
+                                    }
+                                )
+                                
                             }
                         })
                         .disabled(!isValidField() || (selectedImageData == nil && imgUrl == nil))
@@ -254,52 +263,6 @@ struct AddWeaponView: View {
             }
         }
         .navigationTitle("武器追加")
-    }
-    
-    private func getConstAndVariableEffect (effect: String) {
-        // 正規表現パターン: ${...} の中身をキャプチャ
-        let pattern = #"\$\(([^)]*)\)"#
-        
-        // 初期化
-        self.initialEffectValue = []
-        self.finalEffectValue = []
-        self.effectSentence = []
-        
-        do {
-            let regex = try NSRegularExpression(pattern: pattern)
-            let matches = regex.matches(in: effect, range: NSRange(effect.startIndex..., in: effect))
-            
-            // 数値の抽出
-            let values = matches.compactMap {
-                Range($0.range(at: 1), in: effect).map { String(effect[$0]) }
-            }
-            
-            for value in values {
-                let list = value.split(separator: ",")
-                self.initialEffectValue.append(Double(list[0]) ?? 0.0)
-                self.finalEffectValue.append(Double(list[1]) ?? 0.0)
-            }
-            
-            // string部分の抽出
-            var lastIndex = effect.startIndex
-            for match in matches {
-                let range = Range(match.range, in: effect)!
-                
-                // ${...} の前の固定部分
-                if lastIndex < range.lowerBound {
-                    self.effectSentence.append(String(effect[lastIndex..<range.lowerBound]))
-                }
-                lastIndex = range.upperBound
-            }
-            
-            // 最後の残り部分
-            if lastIndex < effect.endIndex {
-                self.effectSentence.append(String(effect[lastIndex..<effect.endIndex]))
-            }
-            
-        } catch {
-            print("正規表現エラー: \(error)")
-        }
     }
     
     private func isValidField () -> Bool {

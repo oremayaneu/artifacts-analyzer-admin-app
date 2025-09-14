@@ -28,9 +28,7 @@ struct DisplayArtifactDetailView: View {
     @State private var showToast = false
     
     var body: some View {
-        if artifactViewModel.isLoadingArtifacts {
-            BlockingIndicator()
-        } else if let artifact = artifactViewModel.selectedArtifact {
+        if let artifact = artifactViewModel.selectedArtifact {
             ZStack {
                 List {
                     if errorUpdateFlg {
@@ -138,16 +136,22 @@ struct DisplayArtifactDetailView: View {
                                 artifact: artifact,
                                 completion: {
                                     // 成功時の処理
-                                    isUpdate.toggle()
-                                    errorUpdateFlg = false
-                                    errorMessage = ""
-                                    showToast = true
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                        isUpdate.toggle()
+                                        errorUpdateFlg = false
+                                        errorMessage = ""
+                                        showToast = true
+                                        isEditing.toggle()
+                                    }
                                 },
                                 errorHandling: {
                                     // エラー時の処理
-                                    isUpdate.toggle()
-                                    errorUpdateFlg = true
-                                    errorMessage = "聖遺物の更新に失敗しました"
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                        isUpdate.toggle()
+                                        errorUpdateFlg = true
+                                        errorMessage = "聖遺物の更新に失敗しました"
+                                        isEditing.toggle()
+                                    }
                                 }
                             )
                         } else {
@@ -159,9 +163,11 @@ struct DisplayArtifactDetailView: View {
                             imgUrlList = artifact.imgUrlList.map { $0.absoluteString }
                             twoSetEffectSentence = artifact.twoSetEffectSentence
                             fourSetEffectSentence = artifact.fourSetEffectSentence
+                            
+                            isEditing.toggle()
                         }
-                        isEditing.toggle()
                     }
+                    .disabled(!isValidField() && isEditing)
                 }
             }
         } else {
@@ -170,9 +176,14 @@ struct DisplayArtifactDetailView: View {
         }
     }
     
-    private func isValidField () -> Bool {
+    private func isValidField() -> Bool {
         return !id.isEmpty &&
         !jpName.isEmpty &&
-        !enName.isEmpty
+        !enName.isEmpty &&
+        !twoSetEffectSentence.isEmpty &&
+        !fourSetEffectSentence.isEmpty &&
+        
+        partNameList.allSatisfy { !$0.isEmpty } &&
+        imgUrlList.allSatisfy { !$0.isEmpty }
     }
 }

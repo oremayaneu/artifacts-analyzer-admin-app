@@ -34,9 +34,7 @@ struct DisplayCharacterDetailView: View {
     @State private var showToast = false
     
     var body: some View {
-        if characterViewModel.isLoadingCharacter {
-            BlockingIndicator()
-        } else if let character = characterViewModel.character {
+        if let character = characterViewModel.character {
             ZStack {
                 List {
                     if errorUpdateFlg {
@@ -156,16 +154,22 @@ struct DisplayCharacterDetailView: View {
                                 character: character,
                                 completion: {
                                     // 成功時の処理
-                                    isUpdate.toggle()
-                                    errorUpdateFlg = false
-                                    errorMessage = ""
-                                    showToast = true
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                        isUpdate.toggle()
+                                        errorUpdateFlg = false
+                                        errorMessage = ""
+                                        showToast = true
+                                        isEditing.toggle()
+                                    }
                                 },
                                 errorHandling: {
                                     // エラー時の処理
-                                    isUpdate.toggle()
-                                    errorUpdateFlg = true
-                                    errorMessage = "キャラクターの更新に失敗しました"
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                        isUpdate.toggle()
+                                        errorUpdateFlg = true
+                                        errorMessage = "キャラクターの更新に失敗しました"
+                                        isEditing.toggle()
+                                    }
                                 }
                             )
                         } else {
@@ -179,12 +183,14 @@ struct DisplayCharacterDetailView: View {
                             hp = "\(character.HP)"
                             attack = "\(character.attack)"
                             defense = "\(character.defense)"
+                            extraStatusName = character.extraStatusName
                             extraStatusValue = "\(character.extraStatusValue)"
                             imgUrl = character.imgUrl.absoluteString
+                            
+                            isEditing.toggle()
                         }
-                        isEditing.toggle()
                     }
-                    .disabled(!isValidField())
+                    .disabled(!isValidField() && isEditing) // 編集中かつinvalid項目があれば完了を押せない
                 }
             }
         } else {
@@ -200,10 +206,11 @@ struct DisplayCharacterDetailView: View {
         !rarity.isEmpty &&
         !element.isEmpty &&
         !weaponType.isEmpty &&
-        !extraStatusName.isEmpty &&
         !hp.isEmpty &&
         !attack.isEmpty &&
         !defense.isEmpty &&
-        !extraStatusValue.isEmpty
+        !extraStatusName.isEmpty &&
+        !extraStatusValue.isEmpty &&
+        !imgUrl.isEmpty
     }
 }
