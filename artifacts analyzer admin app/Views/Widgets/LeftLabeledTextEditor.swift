@@ -1,7 +1,7 @@
 import SwiftUI
 import Combine
 
-struct LabeledTextEditor: View {
+struct LeftLabeledTextEditor: View {
     let label: String
     
     @Binding var text: String
@@ -12,11 +12,11 @@ struct LabeledTextEditor: View {
     var focusField: FocusState<Bool>.Binding?
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            if !label.isEmpty {
-                Text(label)
-                    .font(.caption)
-            }
+        HStack {
+            Text(label)
+                .font(.system(size: 12))
+                .frame(width: 100, alignment: .leading)
+            Divider()
             
             TextEditor(text: $text)
                 .frame(height: height)
