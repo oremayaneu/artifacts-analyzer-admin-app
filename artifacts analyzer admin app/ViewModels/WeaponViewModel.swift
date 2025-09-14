@@ -35,6 +35,7 @@ class WeaponViewModel: ObservableObject {
                     errorHandling()
                     return
                 } else {
+                    self.selectedWeapon = weapon
                     completion()
                 }
             }
@@ -42,8 +43,6 @@ class WeaponViewModel: ObservableObject {
             errorHandling()
         }
     }
-    
-    func updateWeapon() {}
     
     func fetchWeaponAPI(id: String, completion: @escaping (String, String, String, String, String, String, String, String, String) -> Void, errorHandling: @escaping () -> Void) {
         guard let url = URL(string: "https://sg-wiki-api-static.hoyolab.com/hoyowiki/genshin/wapi/entry_page?entry_page_id=\(id)") else { return }
