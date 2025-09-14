@@ -82,7 +82,7 @@ struct PickerTextField: UIViewRepresentable {
             context.coordinator.selectedValue = text.isEmpty ? first : text
         }
         
-        context.coordinator.parent = self
+//        context.coordinator.parent = self
         context.coordinator.textField = textField
         context.coordinator.picker = picker
         
@@ -91,6 +91,11 @@ struct PickerTextField: UIViewRepresentable {
     
     func updateUIView(_ uiView: UITextField, context: Context) {
         uiView.text = text
+        // 親のtextに合わせて、pickerの初期位置を調整する
+        if let index = context.coordinator.parent.options.firstIndex(of: text) {
+            context.coordinator.picker?.selectRow(index, inComponent: 0, animated: false)
+            context.coordinator.selectedValue = text
+        }
     }
     
     class Coordinator: NSObject, UIPickerViewDelegate, UIPickerViewDataSource {

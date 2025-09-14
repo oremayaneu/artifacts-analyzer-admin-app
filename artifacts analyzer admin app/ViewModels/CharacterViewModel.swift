@@ -44,7 +44,7 @@ class CharacterViewModel: ObservableObject {
         }
     }
     
-    func createCharacter(character: Character, id: Int, completion: @escaping () -> Void, errorHandling: @escaping () -> Void) {
+    func createCharacter(character: Character, completion: @escaping () -> Void, errorHandling: @escaping () -> Void) {
         do {
             // キャラクターのパラメータを保存
             try db.collection("characters").document(character.enName).collection("parameter").document("parameter").setData(from: character) { error in
@@ -55,13 +55,15 @@ class CharacterViewModel: ObservableObject {
                 }
                     
                 // キャラクターのダイジェストを保存
-                let characterDigest: CharacterDigest = CharacterDigest (element: character.element, enName: character.enName, imgUrl: character.imgUrl, jpName: character.jpName, rarity: character.rarity, hoyolabId: id)
+                let characterDigest: CharacterDigest = CharacterDigest (element: character.element, enName: character.enName, imgUrl: character.imgUrl, jpName: character.jpName, rarity: character.rarity, hoyolabId: character.hoyolabId)
                 do {
                     try db.collection("characters").document(character.enName).setData(from: characterDigest) { error in
                         if let error = error {
                             print("digest書き込みエラー: \(error)")
                             errorHandling()
                         } else {
+                            // 選択中のデータも更新しておく
+                            self.character = character
                             completion()
                         }
                     }
@@ -75,6 +77,4 @@ class CharacterViewModel: ObservableObject {
             errorHandling()
         }
     }
-    
-    func updateCharacter() {}
 }

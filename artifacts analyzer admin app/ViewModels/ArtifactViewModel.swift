@@ -115,14 +115,13 @@ class ArtifactViewModel: ObservableObject {
                              artifacts.plume_of_death.title,
                              artifacts.sands_of_eon.title,
                              artifacts.goblet_of_eonothem.title,
-                             artifacts.circlet_of_logos.title
-                            ],
+                             artifacts.circlet_of_logos.title],
                             [artifacts.flower_of_life.icon_url,
                              artifacts.plume_of_death.icon_url,
                              artifacts.sands_of_eon.icon_url,
                              artifacts.goblet_of_eonothem.icon_url,
-                             artifacts.circlet_of_logos.icon_url
-                            ])
+                             artifacts.circlet_of_logos.icon_url]
+                        )
                     } else {
                         errorHandling()
                     }
