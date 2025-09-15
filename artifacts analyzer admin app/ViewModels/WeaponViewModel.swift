@@ -34,10 +34,20 @@ class WeaponViewModel: ObservableObject {
                 if error != nil {
                     errorHandling()
                     return
-                } else {
+                }
+                
+                db.collection("admin").document("createTimestamp").updateData(["createdWeapon": FieldValue.serverTimestamp()]) { error in
+                    if let error = error {
+                        print("timestamp書き込みエラー: \(error)")
+                        errorHandling()
+                        return
+                    }
+                    
                     self.selectedWeapon = weapon
                     completion()
                 }
+                
+                
             }
         } catch {
             errorHandling()
