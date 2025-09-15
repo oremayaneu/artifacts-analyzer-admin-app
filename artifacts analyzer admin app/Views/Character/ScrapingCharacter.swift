@@ -4,7 +4,7 @@ import SwiftSoup
 
 struct ScrapingCharacter: UIViewRepresentable {
     let url: URL
-    let onLoaded: (String, [String], [String]) -> Void
+    let onLoaded: (String, [String], [String], String) -> Void
     let onLoading: () -> Void
     let onError: () -> Void
     
@@ -23,12 +23,11 @@ struct ScrapingCharacter: UIViewRepresentable {
                         let texts: Elements = try doc.select("div.ProseMirror p")
                         let tags: Elements = try doc.select("div.c-entry-tag-item.active.genshin")
                         let parameters: Elements = try doc.select("td.m-d-ascension-td")
-                        if let element = try doc.select("meta[property=og:image]").first() {
-                            let content = try element.attr("content")
-                            print(content)
-                        }
+                        let imgs = try doc.select("meta[property=og:image]")
                         
-                        if texts.count >= 2 && tags.count >= 1 && parameters.count >= 80 {
+                        if texts.count >= 2 && tags.count >= 1 && parameters.count >= 80 && imgs.count >= 1 {
+                            let imgUrl = try imgs[0].attr("content")
+                            
                             let name = try texts[1].text()
                             
                             var tagTexts: [String] = []
@@ -44,7 +43,7 @@ struct ScrapingCharacter: UIViewRepresentable {
                                 parameterTexts.append(parameterText)
                             }
                             
-                            self.parent.onLoaded(name, tagTexts, parameterTexts)
+                            self.parent.onLoaded(name, tagTexts, parameterTexts, imgUrl)
                         } else {
                             self.parent.onError()
                         }

@@ -26,6 +26,8 @@ struct AddCharacterView: View {
     @State private var defense = ""
     @State private var extraStatusValue = ""
     
+    @State private var imgUrl: URL?
+    
     // 全体で共有するフォーカス管理
     @FocusState private var isKeyboardActive: Bool
     
@@ -77,28 +79,13 @@ struct AddCharacterView: View {
                         .buttonStyle(.bordered).padding(.top,20)
                     }
                     
-                    PhotosPicker(selection: $selectedItem, matching: .images){
-                        if let data = selectedImageData, let uiImage = UIImage(data: data) {
-                            Image(uiImage: uiImage)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: 200)
-                        } else {
-                            Rectangle()
-                                .fill(Color.gray)
-                                .frame(width: 200, height: 200)
-                                .overlay(
-                                    Image(systemName: "photo")
-                                        .font(.system(size: 25))
-                                )
-                        }
-                    }
-                    .onChange(of: selectedItem) {
-                        Task {
-                            if let data = try? await selectedItem?.loadTransferable(type: Data.self) {
-                                selectedImageData = data
-                            }
-                        }
+                    // 公式apiからimgUrlを取得できた場合
+                    if let url = imgUrl {
+                        NetworkImage(url: url)
+                            .frame(width: 200, height: 200)
+                        
+                    } else {
+                        SelectableImageView(selectedItem: $selectedItem, selectedImageData: $selectedImageData, imageSize: 200, iconSize: 25)
                     }
                     
                     HStack {
@@ -132,66 +119,69 @@ struct AddCharacterView: View {
                         Task {
                             isKeyboardActive = false
                             isCreate.toggle()
+                            
                             if let data = selectedImageData {
-                                let imgUrl = await uploadImageViewModel.uploadImage(
+                                imgUrl = await uploadImageViewModel.uploadImage(
                                     data: data,
                                     imgType: "character",
                                     imgName: enName
                                 )
-                                
-                                if imgUrl != nil {
-                                    var character = Character (
-                                        HP: Int(hp) ?? 0,
-                                        attack: Int(attack) ?? 0,
-                                        defense: Int(defense) ?? 0,
-                                        element: "",    // 後から設定
-                                        enName: enName,
-                                        extraStatusName: extraStatusName,
-                                        extraStatusValue: Double(extraStatusValue) ?? 0,
-                                        imgUrl: imgUrl!,
-                                        jpName: jpName,
-                                        rarity: Int(rarity) ?? 0,
-                                        weaponType: weaponType,
-                                        hoyolabId: Int(id) ?? 0
-                                    )
-                                    character.translateElement = element
-
-                                    characterViewModel.createCharacter(
-                                        character: character,
-                                        completion: {
-                                            // 成功時の処理
-                                            isCreate.toggle()
-                                            errorCreateFlg = false
-                                            errorMessage = ""
-                                            showToast = true
-                                            
-                                            // 初期化
-                                            id = ""
-                                            resetField()
-                                        },
-                                        errorHandling: {
-                                            // エラー時の処理
-                                            isCreate.toggle()
-                                            errorCreateFlg = true
-                                            errorMessage = "キャラクターデータの保存に失敗しました"
-                                        }
-                                    )
-                                } else {
+                            }
+                            
+                            guard let url = imgUrl else {
+                                isCreate.toggle()
+                                errorCreateFlg = true
+                                errorMessage = "キャラクター画像が正しくありません"
+                                return
+                            }
+                            
+                            var character = Character (
+                                HP: Int(hp) ?? 0,
+                                attack: Int(attack) ?? 0,
+                                defense: Int(defense) ?? 0,
+                                element: "",    // 後から設定
+                                enName: enName,
+                                extraStatusName: extraStatusName,
+                                extraStatusValue: Double(extraStatusValue) ?? 0,
+                                imgUrl: url,
+                                jpName: jpName,
+                                rarity: Int(rarity) ?? 0,
+                                weaponType: weaponType,
+                                hoyolabId: Int(id) ?? 0
+                            )
+                            character.translateElement = element
+                            
+                            characterViewModel.createCharacter(
+                                character: character,
+                                completion: {
+                                    // 成功時の処理
+                                    isCreate.toggle()
+                                    errorCreateFlg = false
+                                    errorMessage = ""
+                                    showToast = true
+                                    
+                                    // 初期化
+                                    id = ""
+                                    resetField()
+                                },
+                                errorHandling: {
+                                    // エラー時の処理
                                     isCreate.toggle()
                                     errorCreateFlg = true
-                                    errorMessage = "キャラクター画像の保存に失敗しました"
+                                    errorMessage = "キャラクターデータの保存に失敗しました"
                                 }
-                            }
+                            )
+                            
                         }
                     })
-                    .disabled(!isValidField() || selectedImageData == nil)
+                    .disabled(!isValidField() || (selectedImageData == nil && imgUrl == nil))
                     .buttonStyle(.borderedProminent).padding(.vertical, 30)
                     
                     if isScrape {
                         // スクレイピングでデータを取得
                         ScrapingCharacter(
                             url: URL(string: "https://wiki.hoyolab.com/pc/genshin/entry/\(id)")!,
-                            onLoaded: {name, tags, values in
+                            onLoaded: {name, tags, values, url in
                                 // nameの処理
                                 let parts = name.split(separator: "/").map { $0.trimmingCharacters(in: .whitespaces) }
                                 jpName = parts[0]
@@ -208,6 +198,12 @@ struct AddCharacterView: View {
                                     } else if statusNames.contains(tag){
                                         extraStatusName = tag
                                     }
+                                }
+                                
+                                imgUrl = URL(string: url)
+                                if imgUrl == nil {
+                                    errorScrapeFlg = true
+                                    errorMessage = "画像の取得に失敗しました"
                                 }
                                 
                                 // valuesの処理
@@ -279,6 +275,7 @@ struct AddCharacterView: View {
         extraStatusValue = ""
         
         // 画像関連のリセット
+        imgUrl = nil
         selectedItem = nil
         selectedImageData = nil
     }
