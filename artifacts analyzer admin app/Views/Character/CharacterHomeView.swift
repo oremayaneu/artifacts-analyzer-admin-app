@@ -49,5 +49,6 @@ struct CharacterHomeView: View {
                     DisplayCharacterDetailView(path: $navigationPath, characterViewModel: characterViewModel)
                 }
             }
-        }}
+        }
+    }
 }

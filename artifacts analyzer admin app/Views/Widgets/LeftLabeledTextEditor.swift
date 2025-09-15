@@ -33,7 +33,8 @@ struct LeftLabeledTextEditor: View {
                     RoundedRectangle(cornerRadius: 5)
                         .stroke(Color(UIColor.systemGray6))
                 )
-            
+                .scrollContentBackground(.hidden)
+                .background(Color.darkPrimary)
         }
     }
 }

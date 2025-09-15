@@ -119,6 +119,14 @@ struct DisplayCharacterDetailView: View {
                         }
                     } else {
                         EmptyView() // デフォルトの戻るボタン
+//                        Button(action:{path.removeLast()}){
+//                            HStack{
+//                                Image(systemName: "chevron.left")
+//                                    .foregroundColor(.appTheme)
+//                                Text("キャラクター一覧")
+//                                    .foregroundColor(.appTheme)
+//                            }
+//                        }
                     }
                 }
                 
@@ -192,6 +200,13 @@ struct DisplayCharacterDetailView: View {
                         }
                     }
                     .disabled(!isValidField() && isEditing) // 編集中かつinvalid項目があれば完了を押せない
+                }
+                
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("完了") {
+                        isKeyboardActive = false // キーボード閉じる
+                    }
                 }
             }
         } else {

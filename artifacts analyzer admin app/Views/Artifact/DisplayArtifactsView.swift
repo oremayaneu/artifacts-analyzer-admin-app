@@ -15,13 +15,13 @@ struct DisplayArtifactsView: View {
                         }
                     }.foregroundColor(.primary)
                 }
-                .navigationTitle("聖遺物一覧")
             } else if artifactViewModel.isLoadingArtifacts {
                 BlockingIndicator()
             } else {
                 Text("No artifact")
             }
         }
+        .navigationTitle("聖遺物一覧")
         .onAppear {
             Task {
                 await artifactViewModel.fetchAllArtifacts()

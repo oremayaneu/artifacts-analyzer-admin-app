@@ -28,6 +28,11 @@ struct LeftLabeledTextField: View {
                 }
                 .pickerStyle(.wheel)
                 .frame(height: 100)
+                .background(
+                    Color.darkPrimary // 背景色指定
+                        .cornerRadius(5)
+                )
+                .clipped()
             } else {
                 TextField("", text: $text)
                     .multilineTextAlignment(TextAlignment.trailing)

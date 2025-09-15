@@ -15,13 +15,13 @@ struct DisplayWeaponsView: View {
                         }
                     }.foregroundColor(.primary)
                 }
-                .navigationTitle("武器一覧")
             } else if weaponViewModel.isLoadingWeapons {
                 BlockingIndicator() // 全画面ブロッキングインジケータ
             } else {
                 Text("No weapon")
             }
         }
+        .navigationTitle("武器一覧")
         .onAppear {
             Task {
                 await weaponViewModel.fetchAllWeapons()
