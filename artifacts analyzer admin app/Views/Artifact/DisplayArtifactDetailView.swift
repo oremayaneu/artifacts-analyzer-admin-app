@@ -169,10 +169,18 @@ struct DisplayArtifactDetailView: View {
                     }
                     .disabled(!isValidField() && isEditing)
                 }
+                
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("完了") {
+                        isKeyboardActive = false // キーボード閉じる
+                    }
+                }
             }
         } else {
             Text("情報取得に失敗しました")
                 .foregroundColor(.gray)
+                .navigationTitle("聖遺物詳細")
         }
     }
     

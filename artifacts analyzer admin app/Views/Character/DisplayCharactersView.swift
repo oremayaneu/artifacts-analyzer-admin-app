@@ -15,13 +15,13 @@ struct DisplayCharactersView: View {
                         }
                     }.foregroundColor(.primary)
                 }
-                .navigationTitle("キャラクター一覧")
             } else if characterViewModel.isLoadingAllCharacters {
                 BlockingIndicator() // 全画面ブロッキングインジケータ
             } else {
                 Text("No character")
             }
         }
+        .navigationTitle("キャラクター一覧")
         .onAppear {
             Task {
                 await characterViewModel.fetchAllCharacters()

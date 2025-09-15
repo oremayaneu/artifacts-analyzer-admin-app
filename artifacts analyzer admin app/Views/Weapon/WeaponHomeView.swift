@@ -49,5 +49,6 @@ struct WeaponHomeView: View {
                     DisplayWeaponDetailView(path: $navigationPath, weaponViewModel: weaponViewModel)
                 }
             }
-        }}
+        }
+    }
 }

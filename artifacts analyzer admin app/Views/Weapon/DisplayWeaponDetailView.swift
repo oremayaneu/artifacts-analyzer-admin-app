@@ -188,6 +188,13 @@ struct DisplayWeaponDetailView: View {
                     }
                     .disabled(!isValidField() && isEditing)
                 }
+                
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("完了") {
+                        isKeyboardActive = false // キーボード閉じる
+                    }
+                }
             }
         } else {
             Text("エラーが発生しました")

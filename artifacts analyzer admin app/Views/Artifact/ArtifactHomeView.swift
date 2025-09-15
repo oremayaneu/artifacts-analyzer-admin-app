@@ -49,5 +49,6 @@ struct ArtifactHomeView: View {
                     DisplayArtifactDetailView(path: $navigationPath, artifactViewModel: artifactViewModel)
                 }
             }
-        }}
+        }
+    }
 }
