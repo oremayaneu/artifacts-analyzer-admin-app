@@ -55,13 +55,23 @@ struct AddCharacterView: View {
                     }
                     
                     HStack {
-                        LabeledTextField(label: "hoyolab ID", text: $id, numberType: "Int", focusField: $isKeyboardActive)
+                        LabeledTextField(label: "hoyolab URL または ID", text: $id, focusField: $isKeyboardActive)
                         Button("自動取得", action: {
                             isKeyboardActive = false
                             // 初期化
                             resetField()
-                            // スクレイピング開始
-                            isScrape.toggle()
+                            // 入力のパターンがURL
+                            if let url = URL(string: id) {
+                                id = url.lastPathComponent // 最後のpathを取得
+                            }
+                            if Int(id) != nil {
+                                // スクレイピング開始
+                                isScrape.toggle()
+                            } else {
+                                id = ""
+                                errorCreateFlg = true
+                                errorMessage = "自動取得において不正な値が入力されました"
+                            }
                         })
                         .disabled(id.isEmpty)
                         .buttonStyle(.bordered).padding(.top,20)

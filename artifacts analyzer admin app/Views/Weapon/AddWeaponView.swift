@@ -64,7 +64,7 @@ struct AddWeaponView: View {
                         }
                         
                         HStack {
-                            LabeledTextField(label: "hoyolab ID", text: $id, numberType: "Int", focusField: $isKeyboardActive)
+                            LabeledTextField(label: "hoyolab URL または ID", text: $id, focusField: $isKeyboardActive)
                             Button("自動取得", action: {
                                 // キーボードを閉じる
                                 isKeyboardActive = false
@@ -72,6 +72,17 @@ struct AddWeaponView: View {
                                 // 全てのfieldを初期化
                                 resetField()
                                 imgUrl = nil
+                                
+                                // 入力のパターンがURL
+                                if let url = URL(string: id) {
+                                    id = url.lastPathComponent // 最後のpathを取得
+                                }
+                                if Int(id) == nil  {
+                                    id = ""
+                                    errorCreateFlg = true
+                                    errorMessage = "自動取得において不正な値が入力されました"
+                                    return
+                                }
                                 
                                 weaponViewModel.fetchWeaponAPI(
                                     id: id,
