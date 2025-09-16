@@ -192,15 +192,27 @@ struct AddWeaponView: View {
                                 isKeyboardActive = false
                                 isCreate.toggle()
                                 
-                                if let data = selectedImageData {
-                                    imgUrl = await uploadImageViewModel.uploadImage(
-                                        data: data,
-                                        imgType: "weapon",
-                                        imgName: enName
-                                    )
+                                // 外部から取得した画像urlがある場合、selectedImageDataに落とし込む
+                                if let url = imgUrl {
+                                    let (data, _) = try await URLSession.shared.data(from: url)
+                                    selectedImageData = data
                                 }
                                 
-                                guard let imgUrl = imgUrl else {
+                                // selectedImageDataのguard
+                                guard let imageData = selectedImageData else {
+                                    isCreate.toggle()
+                                    errorCreateFlg = true
+                                    errorMessage = "武器画像が選択されていません"
+                                    return
+                                }
+                                
+                                // storageにアップロード
+                                let url = await uploadImageViewModel.uploadImage(
+                                    data: imageData,
+                                    imgType: "weapon",
+                                    imgName: enName
+                                )
+                                if url == nil {
                                     isCreate.toggle()
                                     errorCreateFlg = true
                                     errorMessage = "武器画像が正しくありません"
@@ -212,7 +224,7 @@ struct AddWeaponView: View {
                                     effectSentence: [""], // 後で更新
                                     enName: enName,
                                     finalEffectValue: [0.0], // 後で更新
-                                    imgUrl: imgUrl,
+                                    imgUrl: url!,
                                     initialEffectValue: [0.0], // 後で更新
                                     jpName: jpName,
                                     rarity: Int(rarity) ?? 0,
