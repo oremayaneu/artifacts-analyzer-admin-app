@@ -146,59 +146,73 @@ struct AddArtifactView: View {
                                 isKeyboardActive = false
                                 isCreate.toggle()
                                 
-                                // 画像をuploadする箇所だけ処理
+                                // 外部から取得した画像urlがある場合、selectedImageDataに落とし込む
                                 for i in 0 ..< 5 {
-                                    if let data = selectedImageDatas[i] {
-                                        imgUrlList[i] = await uploadImageViewModel.uploadImage(
-                                            data: data,
-                                            imgType: "artifact",
-                                            imgName: enName
-                                        )
+                                    if let url = imgUrlList[i] {
+                                        let (data, _) = try await URLSession.shared.data(from: url)
+                                        selectedImageDatas[i] = data
+                                    }
+                                    if selectedImageDatas[i] == nil {
+                                        isCreate.toggle()
+                                        errorCreateFlg = true
+                                        errorMessage = "聖遺物画像が選択されていません"
+                                        return
                                     }
                                 }
                                 
-                                if imgUrlList.allSatisfy({ $0 != nil }) {
-                                    let urls = imgUrlList.compactMap { $0 } // [URL] に変換
-                                    let artifact = Artifact (
-                                        jpName: jpName,
-                                        enName: enName,
-                                        partNameList: partNameList,
-                                        imgUrlList: urls,
-                                        twoSetEffectSentence: twoSetEffectSentence,
-                                        fourSetEffectSentence: fourSetEffectSentence,
-                                        hoyolabId: Int(id) ?? 0
+                                var uploadUrls: [URL?] = Array(repeating: nil, count: 5)
+                                // storageにアップロード
+                                for i in 0 ..< 5 {
+                                    uploadUrls[i] = await uploadImageViewModel.uploadImage(
+                                        data: selectedImageDatas[i]!,
+                                        imgType: "artifact",
+                                        imgName: "\(enName)\(i)"
                                     )
-                                    
-                                    artifactViewModel.createArtifact(
-                                        artifact: artifact,
-                                        completion: {
-                                            // 成功時の処理
-                                            isCreate.toggle()
-                                            errorCreateFlg = false
-                                            errorMessage = ""
-                                            showToast = true
-                                            
-                                            // 初期化
-                                            id = ""
-                                            resetField()
-                                            
-                                            // 上へスクロール
-                                            withAnimation {
-                                                reader.scrollTo("top")
-                                            }
-                                        },
-                                        errorHandling: {
-                                            // エラー時の処理
-                                            isCreate.toggle()
-                                            errorCreateFlg = true
-                                            errorMessage = "聖遺物データの保存に失敗しました"
-                                        }
-                                    )
-                                } else {
-                                    isCreate.toggle()
-                                    errorCreateFlg = true
-                                    errorMessage = "聖遺物画像が正しくありません"
+                                    if uploadUrls[i] == nil {
+                                        isCreate.toggle()
+                                        errorCreateFlg = true
+                                        errorMessage = "聖遺物画像が正しくありません"
+                                        return
+                                    }
                                 }
+                                
+                                let urls = uploadUrls.compactMap { $0 } // [URL] に変換
+                                let artifact = Artifact (
+                                    jpName: jpName,
+                                    enName: enName,
+                                    partNameList: partNameList,
+                                    imgUrlList: urls,
+                                    twoSetEffectSentence: twoSetEffectSentence,
+                                    fourSetEffectSentence: fourSetEffectSentence,
+                                    hoyolabId: Int(id) ?? 0
+                                )
+                                
+                                artifactViewModel.createArtifact(
+                                    artifact: artifact,
+                                    completion: {
+                                        // 成功時の処理
+                                        isCreate.toggle()
+                                        errorCreateFlg = false
+                                        errorMessage = ""
+                                        showToast = true
+                                        
+                                        // 初期化
+                                        id = ""
+                                        resetField()
+                                        
+                                        // 上へスクロール
+                                        withAnimation {
+                                            reader.scrollTo("top")
+                                        }
+                                    },
+                                    errorHandling: {
+                                        // エラー時の処理
+                                        isCreate.toggle()
+                                        errorCreateFlg = true
+                                        errorMessage = "聖遺物データの保存に失敗しました"
+                                    }
+                                )
+                                
                             }
                         })
                         .disabled(!isValidField() ||

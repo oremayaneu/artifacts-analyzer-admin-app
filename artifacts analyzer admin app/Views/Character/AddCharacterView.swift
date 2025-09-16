@@ -120,15 +120,27 @@ struct AddCharacterView: View {
                             isKeyboardActive = false
                             isCreate.toggle()
                             
-                            if let data = selectedImageData {
-                                imgUrl = await uploadImageViewModel.uploadImage(
-                                    data: data,
-                                    imgType: "character",
-                                    imgName: enName
-                                )
+                            // 外部から取得した画像urlがある場合、selectedImageDataに落とし込む
+                            if let url = imgUrl {
+                                let (data, _) = try await URLSession.shared.data(from: url)
+                                selectedImageData = data
                             }
                             
-                            guard let url = imgUrl else {
+                            // selectedImageDataのguard
+                            guard let imageData = selectedImageData else {
+                                isCreate.toggle()
+                                errorCreateFlg = true
+                                errorMessage = "キャラクター画像が選択されていません"
+                                return
+                            }
+                            
+                            // storageにアップロード
+                            let url = await uploadImageViewModel.uploadImage(
+                                data: imageData,
+                                imgType: "character",
+                                imgName: enName
+                            )
+                            if url == nil {
                                 isCreate.toggle()
                                 errorCreateFlg = true
                                 errorMessage = "キャラクター画像が正しくありません"
@@ -143,7 +155,7 @@ struct AddCharacterView: View {
                                 enName: enName,
                                 extraStatusName: extraStatusName,
                                 extraStatusValue: Double(extraStatusValue) ?? 0,
-                                imgUrl: url,
+                                imgUrl: url!,
                                 jpName: jpName,
                                 rarity: Int(rarity) ?? 0,
                                 weaponType: weaponType,
